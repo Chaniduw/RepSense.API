@@ -27,5 +27,15 @@ namespace RepSense.API.Services
             );
             return user;
         }
+
+        public async Task<User> UpdateUserProfileAsync(User user)
+        {
+            await _users.ReplaceOneAsync(
+                u => u.Id == user.Id,
+                user,
+                new ReplaceOptions { IsUpsert = true }
+            );
+            return user;
+        }
     }
 }

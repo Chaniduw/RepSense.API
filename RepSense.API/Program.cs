@@ -47,6 +47,7 @@ if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(databaseNam
     builder.Services.AddSingleton<IMongoClient>(mongoClient);
     builder.Services.AddSingleton(mongoDatabase);
     builder.Services.AddSingleton(mongoDatabase.GetCollection<User>("users"));
+    builder.Services.AddSingleton(mongoDatabase.GetCollection<WorkoutSession>("workouts"));
 }
 else
 {
@@ -55,6 +56,7 @@ else
 
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<WorkoutService>();
 
 // --- JWT Authentication Configuration ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
