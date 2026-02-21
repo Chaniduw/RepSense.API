@@ -1,8 +1,9 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Google.Cloud.Firestore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
+using RepSense.API.Models;
 using RepSense.API.Services;
 using System.Text;
 
@@ -15,38 +16,41 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// --- Firebase & Firestore Configuration ---
+// --- Firebase Auth Configuration (kept for Google login token verification) ---
 var firebaseConfig = builder.Configuration.GetSection("Firebase");
 var credentialPath = firebaseConfig["CredentialPath"];
-var projectId = firebaseConfig["ProjectId"];
 
-// Only initialize if config is present (Robustness for "I'll create project later")
 if (!string.IsNullOrEmpty(credentialPath) && File.Exists(credentialPath))
 {
     var credential = GoogleCredential.FromFile(credentialPath);
-    
+
     FirebaseApp.Create(new AppOptions
     {
         Credential = credential,
-        ProjectId = projectId
-    });
-
-    builder.Services.AddSingleton(provider =>
-    {
-        var firestoreBuilder = new FirestoreDbBuilder
-        {
-            ProjectId = projectId,
-            Credential = credential
-        };
-        return firestoreBuilder.Build();
     });
 }
 else
 {
-    Console.WriteLine("WARNING: Firebase Credential file not found. Firebase services will not work.");
-    // Register a dummy or allow DI to fail at runtime if services are used?
-    // For now, we won't register FirestoreDb, so the app might fail to start if it eagerly resolves dependent services,
-    // but Controller resolution is lazy.
+    Console.WriteLine("WARNING: Firebase Credential file not found. Firebase Auth will not work.");
+}
+
+// --- MongoDB Configuration ---
+var mongoConfig = builder.Configuration.GetSection("MongoDB");
+var connectionString = mongoConfig["ConnectionString"];
+var databaseName = mongoConfig["DatabaseName"];
+
+if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(databaseName))
+{
+    var mongoClient = new MongoClient(connectionString);
+    var mongoDatabase = mongoClient.GetDatabase(databaseName);
+
+    builder.Services.AddSingleton<IMongoClient>(mongoClient);
+    builder.Services.AddSingleton(mongoDatabase);
+    builder.Services.AddSingleton(mongoDatabase.GetCollection<User>("users"));
+}
+else
+{
+    Console.WriteLine("WARNING: MongoDB configuration is missing. Database services will not work.");
 }
 
 builder.Services.AddScoped<UserService>();
@@ -88,10 +92,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // Ensure this is before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
-//hello

@@ -1,38 +1,30 @@
-using Google.Cloud.Firestore;
+using MongoDB.Driver;
 using RepSense.API.Models;
 
 namespace RepSense.API.Services
 {
     public class UserService
     {
-        private readonly FirestoreDb _firestoreDb;
-        private const string CollectionName = "users";
+        private readonly IMongoCollection<User> _users;
 
-        public UserService(FirestoreDb firestoreDb)
+        public UserService(IMongoCollection<User> users)
         {
-            _firestoreDb = firestoreDb;
+            _users = users;
         }
 
         public async Task<User?> GetUserByIdAsync(string uid)
         {
-            var docRef = _firestoreDb.Collection(CollectionName).Document(uid);
-            var snapshot = await docRef.GetSnapshotAsync();
-
-            if (!snapshot.Exists)
-            {
-                return null;
-            }
-
-            var user = snapshot.ConvertTo<User>();
-            user.Id = snapshot.Id;
-            return user;
+            return await _users.Find(u => u.Id == uid).FirstOrDefaultAsync();
         }
 
         public async Task<User> CreateUserAsync(User user, string uid)
         {
-            var docRef = _firestoreDb.Collection(CollectionName).Document(uid);
-            await docRef.SetAsync(user);
             user.Id = uid;
+            await _users.ReplaceOneAsync(
+                u => u.Id == uid,
+                user,
+                new ReplaceOptions { IsUpsert = true }
+            );
             return user;
         }
     }

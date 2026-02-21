@@ -1,50 +1,51 @@
-using Google.Cloud.Firestore;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace RepSense.API.Models
 {
-    [FirestoreData]
     public class User
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
         public string Id { get; set; } = string.Empty; // Document ID (usually Auth UID)
 
-        [FirestoreProperty("profile")]
+        [BsonElement("profile")]
         public UserProfile Profile { get; set; } = new UserProfile();
     }
 
-    [FirestoreData]
     public class UserProfile
     {
-        [FirestoreProperty("name")]
+        [BsonElement("name")]
         public string? Name { get; set; }
 
-        [FirestoreProperty("email")]
+        [BsonElement("email")]
         public string? Email { get; set; }
 
-        [FirestoreProperty("photoUrl")]
+        [BsonElement("photoUrl")]
         public string? PhotoUrl { get; set; }
 
-        [FirestoreProperty("gender")]
+        [BsonElement("gender")]
         public string? Gender { get; set; }
 
-        [FirestoreProperty("dateOfBirth")]
+        [BsonElement("dateOfBirth")]
         public DateTime? DateOfBirth { get; set; }
 
-        [FirestoreProperty("height")]
+        [BsonElement("height")]
         public double? Height { get; set; }
 
-        [FirestoreProperty("weight")]
+        [BsonElement("weight")]
         public double? Weight { get; set; }
 
-        [FirestoreProperty("program")]
+        [BsonElement("program")]
         public string? Program { get; set; }
 
-        [FirestoreProperty("notificationsEnabled")]
+        [BsonElement("notificationsEnabled")]
         public bool? NotificationsEnabled { get; set; } = true;
 
-        [FirestoreProperty("createdAt")]
+        [BsonElement("createdAt")]
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [FirestoreProperty("updatedAt")]
+        [BsonElement("updatedAt")]
         public DateTime? UpdatedAt { get; set; }
     }
 }
