@@ -13,4 +13,16 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Exclude duplicate files from parent directory -->
+    <Compile Remove="../Controllers/**" />
+    <Compile Remove="../Models/**" />
+    <Compile Remove="../Services/**" />
+    <Compile Remove="../WeatherForecast.cs" />
+    <Content Remove="../Controllers/**" />
+    <Content Remove="../Models/**" />
+    <Content Remove="../Services/**" />
+    <Content Remove="../WeatherForecast.cs" />
+  </ItemGroup>
+
 </Project>
