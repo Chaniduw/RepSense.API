@@ -1,0 +1,53 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main      # Change to 'master' if your default branch is master
+      - develop   # Optional: deploy develop branch to staging
+  workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
+
+env:
+  AZURE_WEBAPP_NAME: repsense-api-lk  # Your Azure App Service name
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: 'RepSense.API/RepSense.API/RepSense.API.csproj'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.PROJECT_PATH }}
+
+    - name: Build
+      run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore
+
+    - name: Publish
+      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish
+
+    - name: Create Firebase credential file
+      run: |
+        if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}" ]; then
+          echo "ERROR: FIREBASE_SERVICE_ACCOUNT_KEY secret is empty or not set!"
+          exit 1
+        fi
+        echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > ./publish/serviceAccountKey.json
+        echo "Firebase credential file created successfully"
+        ls -la ./publish/serviceAccountKey.json
+      shell: bash
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./publish

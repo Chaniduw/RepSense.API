@@ -1,0 +1,28 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "Firebase": {
+    "CredentialPath": "serviceAccountKey.json"
+  },
+  "MongoDB": {
+    "ConnectionString": "YOUR_MONGODB_CONNECTION_STRING_HERE",
+    "DatabaseName": "RepSenseDb"
+  },
+  "Jwt": {
+    "Key": "YOUR_SECRET_JWT_KEY_MIN_32_CHARACTERS_LONG",
+    "Issuer": "RepSense.API",
+    "Audience": "RepSense.App"
+  },
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://0.0.0.0:5241"
+      }
+    }
+  }
+}
