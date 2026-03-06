@@ -47,6 +47,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
+          path: ./myapp
       
       - name: Create Firebase credential file
         run: |
@@ -55,17 +56,10 @@ jobs:
             echo "ERROR: FIREBASE_SERVICE_ACCOUNT_KEY secret is empty or not set!"
             exit 1
           fi
-          printf '%s\n' "$FIREBASE_KEY" > serviceAccountKey.json
+          printf '%s\n' "$FIREBASE_KEY" > ./myapp/serviceAccountKey.json
           echo "Firebase credential file created successfully"
-          ls -la serviceAccountKey.json
-          echo "File size: $(wc -c < serviceAccountKey.json) bytes"
-        shell: bash
-      
-      - name: Copy Firebase credential to deployment package
-        run: |
-          cp serviceAccountKey.json ${{env.DOTNET_ROOT}}/myapp/serviceAccountKey.json
-          echo "Firebase credential copied to deployment package"
-          ls -la ${{env.DOTNET_ROOT}}/myapp/serviceAccountKey.json
+          ls -la ./myapp/serviceAccountKey.json
+          echo "File size: $(wc -c < ./myapp/serviceAccountKey.json) bytes"
         shell: bash
       
       - name: Login to Azure
@@ -81,4 +75,4 @@ jobs:
         with:
           app-name: 'repsense-api-lk'
           slot-name: 'Production'
-          package: ${{env.DOTNET_ROOT}}/myapp
+          package: ./myapp
