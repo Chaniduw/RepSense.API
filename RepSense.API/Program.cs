@@ -85,12 +85,14 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+// Configure Kestrel to use Azure's PORT environment variable
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://0.0.0.0:{port}");
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Enable Swagger in all environments for testing (disable in production later)
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
