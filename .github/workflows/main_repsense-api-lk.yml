@@ -50,11 +50,12 @@ jobs:
       
       - name: Create Firebase credential file
         run: |
-          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}" ]; then
+          FIREBASE_KEY='${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}'
+          if [ -z "$FIREBASE_KEY" ] || [ "$FIREBASE_KEY" = "" ]; then
             echo "ERROR: FIREBASE_SERVICE_ACCOUNT_KEY secret is empty or not set!"
             exit 1
           fi
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > serviceAccountKey.json
+          printf '%s\n' "$FIREBASE_KEY" > serviceAccountKey.json
           echo "Firebase credential file created successfully"
           ls -la serviceAccountKey.json
           echo "File size: $(wc -c < serviceAccountKey.json) bytes"
