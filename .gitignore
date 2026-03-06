@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Firebase service account key (contains sensitive credentials)
+serviceAccountKey.json
+**/serviceAccountKey.json
+**/RepSense.API/serviceAccountKey.json
