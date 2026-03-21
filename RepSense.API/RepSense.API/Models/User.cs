@@ -11,6 +11,21 @@ namespace RepSense.API.Models
 
         [BsonElement("profile")]
         public UserProfile Profile { get; set; } = new UserProfile();
+
+        [BsonElement("auth")]
+        public UserAuth Auth { get; set; } = new UserAuth();
+    }
+
+    public class UserAuth
+    {
+        [BsonElement("provider")]
+        public string Provider { get; set; } = "google";
+
+        [BsonElement("passwordHash")]
+        public string? PasswordHash { get; set; }
+
+        [BsonElement("passwordSalt")]
+        public string? PasswordSalt { get; set; }
     }
 
     public class UserProfile

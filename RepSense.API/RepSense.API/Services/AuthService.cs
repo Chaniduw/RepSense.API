@@ -1,6 +1,7 @@
 using FirebaseAdmin.Auth;
 using Microsoft.IdentityModel.Tokens;
 using RepSense.API.Models;
+using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -41,7 +42,8 @@ namespace RepSense.API.Services
                             Name = name,
                             PhotoUrl = picture,
                             CreatedAt = DateTime.UtcNow
-                        }
+                        },
+                        Auth = new UserAuth { Provider = "google" }
                     };
                     await _userService.CreateUserAsync(user, uid);
                 }
@@ -61,6 +63,70 @@ namespace RepSense.API.Services
                 var errorMessage = ex.InnerException?.Message ?? ex.Message;
                 throw new Exception($"Invalid Token: {errorMessage}", ex);
             }
+        }
+
+        public async Task<string> RegisterWithEmailPasswordAsync(string email, string password, string? name, string? phone)
+        {
+            var normalizedEmail = email.Trim().ToLower();
+            var existing = await _userService.GetUserByEmailAsync(normalizedEmail);
+            if (existing != null)
+            {
+                throw new InvalidOperationException("An account already exists with this email.");
+            }
+
+            var saltBytes = RandomNumberGenerator.GetBytes(16);
+            var hash = HashPassword(password, saltBytes);
+            var userId = Guid.NewGuid().ToString("N");
+
+            var user = new User
+            {
+                Id = userId,
+                Profile = new UserProfile
+                {
+                    Email = normalizedEmail,
+                    Name = name,
+                    Program = null,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                Auth = new UserAuth
+                {
+                    Provider = "email",
+                    PasswordSalt = Convert.ToBase64String(saltBytes),
+                    PasswordHash = hash
+                }
+            };
+
+            await _userService.CreateUserAsync(user, userId);
+            return GenerateJwtToken(user);
+        }
+
+        public async Task<string> LoginWithEmailPasswordAsync(string email, string password)
+        {
+            var normalizedEmail = email.Trim().ToLower();
+            var user = await _userService.GetUserByEmailAsync(normalizedEmail);
+            if (user == null || string.IsNullOrEmpty(user.Auth?.PasswordHash) || string.IsNullOrEmpty(user.Auth?.PasswordSalt))
+            {
+                throw new UnauthorizedAccessException("Invalid email or password.");
+            }
+
+            var saltBytes = Convert.FromBase64String(user.Auth.PasswordSalt);
+            var computedHash = HashPassword(password, saltBytes);
+            if (!CryptographicOperations.FixedTimeEquals(
+                Convert.FromBase64String(computedHash),
+                Convert.FromBase64String(user.Auth.PasswordHash)))
+            {
+                throw new UnauthorizedAccessException("Invalid email or password.");
+            }
+
+            return GenerateJwtToken(user);
+        }
+
+        private static string HashPassword(string password, byte[] saltBytes)
+        {
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, 100_000, HashAlgorithmName.SHA256);
+            var hashBytes = pbkdf2.GetBytes(32);
+            return Convert.ToBase64String(hashBytes);
         }
 
         private string GenerateJwtToken(User user)

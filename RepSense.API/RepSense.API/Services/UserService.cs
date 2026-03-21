@@ -17,6 +17,13 @@ namespace RepSense.API.Services
             return await _users.Find(u => u.Id == uid).FirstOrDefaultAsync();
         }
 
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            return await _users
+                .Find(u => u.Profile.Email != null && u.Profile.Email.ToLower() == email.ToLower())
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<User> CreateUserAsync(User user, string uid)
         {
             user.Id = uid;
