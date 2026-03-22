@@ -58,9 +58,11 @@ namespace RepSense.API.Services
 
         public async Task<string> GetCoachReplyAsync(string userId, string userMessage, CancellationToken cancellationToken = default)
         {
-            var apiKey = _configuration["OpenAI:ApiKey"];
+            var apiKey = ResolveOpenAiApiKey();
             if (string.IsNullOrWhiteSpace(apiKey))
             {
+                _logger.LogWarning(
+                    "OpenAI API key is missing. Set Azure App Setting OpenAI__ApiKey (two underscores) or OPENAI_API_KEY, then restart the app.");
                 throw new InvalidOperationException("OpenAI API key is not configured.");
             }
 
@@ -101,7 +103,7 @@ namespace RepSense.API.Services
 
             var client = _httpClientFactory.CreateClient();
             using var req = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
-            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey.Trim());
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             req.Content = new StringContent(
                 JsonSerializer.Serialize(requestBody, OpenAiRequestJsonOptions),
                 Encoding.UTF8,
@@ -134,6 +136,33 @@ namespace RepSense.API.Services
             }
 
             return content.Trim();
+        }
+
+        /// <summary>
+        /// Resolves the key from configuration (appsettings + Azure App Settings) and plain env vars.
+        /// Azure: use name <c>OpenAI__ApiKey</c> (nested OpenAI:ApiKey) or <c>OPENAI_API_KEY</c>.
+        /// </summary>
+        private string? ResolveOpenAiApiKey()
+        {
+            var k = _configuration["OpenAI:ApiKey"];
+            if (!string.IsNullOrWhiteSpace(k))
+            {
+                return k.Trim();
+            }
+
+            k = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+            if (!string.IsNullOrWhiteSpace(k))
+            {
+                return k.Trim();
+            }
+
+            k = Environment.GetEnvironmentVariable("OpenAI__ApiKey");
+            if (!string.IsNullOrWhiteSpace(k))
+            {
+                return k.Trim();
+            }
+
+            return null;
         }
 
         private async Task<string> BuildUserContextJsonAsync(string userId, CancellationToken cancellationToken)
