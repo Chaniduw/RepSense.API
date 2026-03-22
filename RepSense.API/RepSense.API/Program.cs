@@ -55,10 +55,12 @@ else
     Console.WriteLine("WARNING: MongoDB configuration is missing. Database services will not work.");
 }
 
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<WorkoutService>();
 builder.Services.AddScoped<ScheduleService>();
+builder.Services.AddScoped<CoachChatService>();
 
 // --- JWT Authentication Configuration ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
