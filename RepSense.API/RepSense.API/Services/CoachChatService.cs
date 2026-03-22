@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -115,7 +116,22 @@ namespace RepSense.API.Services
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("OpenAI HTTP {Status}: {Body}", response.StatusCode, body);
-                throw new HttpRequestException($"OpenAI returned {(int)response.StatusCode}");
+                var openAiDetail = TryParseOpenAiErrorMessage(body);
+                var code = (int)response.StatusCode;
+                var summary = response.StatusCode switch
+                {
+                    HttpStatusCode.TooManyRequests =>
+                        "OpenAI returned 429 (rate limit or quota). Check billing/usage at platform.openai.com, add credits if needed, or wait a minute and retry.",
+                    HttpStatusCode.PaymentRequired =>
+                        "OpenAI returned 402 (billing). Add a payment method or credits on platform.openai.com.",
+                    _ => $"OpenAI returned HTTP {code}.",
+                };
+                if (!string.IsNullOrWhiteSpace(openAiDetail))
+                {
+                    summary += " Details: " + openAiDetail;
+                }
+
+                throw new HttpRequestException(summary);
             }
 
             OpenAiChatResponse? parsed;
@@ -136,6 +152,30 @@ namespace RepSense.API.Services
             }
 
             return content.Trim();
+        }
+
+        private static string? TryParseOpenAiErrorMessage(string body)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return null;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("error", out var err) &&
+                    err.TryGetProperty("message", out var msg))
+                {
+                    return msg.GetString();
+                }
+            }
+            catch (JsonException)
+            {
+                // ignore
+            }
+
+            return null;
         }
 
         /// <summary>
