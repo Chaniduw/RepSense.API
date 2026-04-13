@@ -3,10 +3,8 @@
 
 name: Build and deploy ASP.Net Core app to Azure Web App - repsense-api-lk
 
+# Disabled automatic deploy — use repo root .github/workflows/azure-deploy.yml
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:

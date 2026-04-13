@@ -8,7 +8,8 @@ on:
   workflow_dispatch:  # Allows manual trigger from GitHub Actions tab
 
 env:
-  AZURE_WEBAPP_NAME: repsense-api-lk  # Your Azure App Service name
+  # Must match your Web App name in Azure Portal (e.g. https://repsense-api-prod.azurewebsites.net)
+  AZURE_WEBAPP_NAME: repsense-api-prod
   DOTNET_VERSION: '8.0.x'
   PROJECT_PATH: 'RepSense.API/RepSense.API/RepSense.API.csproj'
 
@@ -34,15 +35,15 @@ jobs:
     - name: Publish
       run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release --no-build --output ./publish
 
-    - name: Create Firebase credential file
+    - name: Create Firebase credential file (optional)
       run: |
         if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}" ]; then
-          echo "ERROR: FIREBASE_SERVICE_ACCOUNT_KEY secret is empty or not set!"
-          exit 1
+          echo "WARNING: FIREBASE_SERVICE_ACCOUNT_KEY not set — skipping serviceAccountKey.json (Google token verify disabled until you add the secret)."
+        else
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > ./publish/serviceAccountKey.json
+          echo "Firebase credential file created successfully"
+          ls -la ./publish/serviceAccountKey.json
         fi
-        echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > ./publish/serviceAccountKey.json
-        echo "Firebase credential file created successfully"
-        ls -la ./publish/serviceAccountKey.json
       shell: bash
 
     - name: Deploy to Azure Web App

@@ -3,10 +3,9 @@
 
 name: Build and deploy ASP.Net Core app to Azure Web App - repsense-api-lk
 
+# Disabled automatic deploy: this workflow used the old university Azure OIDC secrets.
+# Use "Deploy to Azure App Service" (azure-deploy.yml) with AZURE_WEBAPP_PUBLISH_PROFILE instead.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
