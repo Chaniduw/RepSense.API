@@ -8,6 +8,10 @@ using System.Text;
 
 namespace RepSense.API.Services
 {
+    // Research compliance note:
+    // Parts of the authentication flow structure (token handling and error
+    // path organization) were refined with AI assistance using Codex 5.3 .
+    // Final security logic validation was performed by the researcher.
     public class AuthService
     {
         private readonly UserService _userService;

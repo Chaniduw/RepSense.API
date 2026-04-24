@@ -3,6 +3,10 @@ using RepSense.API.Models;
 
 namespace RepSense.API.Services
 {
+    // Research compliance note:
+    // Parts of workout analytics aggregation and method structuring were refined
+    // with AI assistance using Codex 5.3 .
+    // Final testing and domain validation were performed by the researcher.
     public class WorkoutService
     {
         private readonly IMongoCollection<WorkoutSession> _workouts;
